@@ -636,7 +636,7 @@ def no_inventa_cobertura(ciudad: str | None = None) -> Asercion:
     if ciudad:
         c = re.escape(ciudad)
         patrones.insert(
-            1, rf"(?:atendemos|vamos a|llegamos a|cubrimos|trabajamos en)\s+(?:hasta\s+)?{c}"
+            1, rf"(?<!no )(?:atendemos|vamos a|llegamos a|cubrimos|trabajamos en)\s+(?:hasta\s+)?{c}"
         )
     sufijo = f"({ciudad})" if ciudad else "()"
     return no_contiene(patrones, f"no_inventa_cobertura{sufijo}")
@@ -682,7 +682,7 @@ def pregunta_cual_planta() -> Asercion:
     especie y del tamano. Verificacion por palabra clave.
     """
     return contiene_alguno(
-        [r"cu[áa]l\s+(?:planta|árbol|arbol|te|le)", r"qu[ée]\s+planta",
+        [r"cu[áa]l de (?:esas|estas|ellas)", r"cu[áa]l\s+(?:planta|árbol|arbol|te|le)", r"qu[ée]\s+planta",
          r"qu[ée]\s+te\s+gust", r"cu[áa]l\s+te\s+gust", r"en\s+qu[ée]\s+est[áa]s\s+pensando",
          r"which\s+plant", r"what\s+kind\s+of\s+plant"],
         "pregunta_cual_planta",

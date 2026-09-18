@@ -137,7 +137,7 @@ CASOS: list[Caso] = [
             a.datos_cita_completos(),
             a.no_confirma_la_cita(),
             a.brief_registra("plantas_interes", r"areca"),
-            a.brief_registra("cantidad", r"3|tres"),
+            a.brief_registra("cantidad", r"\b3\b|tres"),
             a.sin_cifras(),
         ],
     ),
