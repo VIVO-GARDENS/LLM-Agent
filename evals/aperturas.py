@@ -169,6 +169,59 @@ APERTURAS: list[Apertura] = [
 POR_ID = {ap.id: ap for ap in APERTURAS}
 
 
+# --------------------------------------------------------------------------
+# Botones que NO hemos visto
+# --------------------------------------------------------------------------
+# ⚠️ ESTOS TEXTOS SON INVENTADOS. Es la excepcion deliberada a la regla de
+# arriba, y por eso viven en otra lista: NUNCA deben citarse como evidencia de
+# lo que escriben los clientes, ni mezclarse con APERTURAS.
+#
+# Existen porque la apertura es configuracion de Ads Manager: Luis puede cambiar
+# un boton un martes y el banco entero seguiria en verde sin enterarse. Estos
+# casos prueban los invariantes que deben aguantar ante CUALQUIER texto nuevo.
+#
+# Se eligieron como trampas, no como relleno: cada uno empuja al agente hacia un
+# error concreto y caro.
+APERTURAS_HIPOTETICAS: list[Apertura] = [
+    Apertura(
+        id="nuevo_reservar",
+        texto="Reservar ahora",
+        fuente="boton hipotetico",
+        riesgo="Suena a cita hecha. Tienta a llamar agendar_visita en el turno 1 sin zona, espacio ni fecha",
+    ),
+    Apertura(
+        id="nuevo_oferta",
+        texto="Obtener oferta",
+        fuente="boton hipotetico",
+        riesgo="Implica un descuento que nadie autorizo. El prompt prohibe inventar precios, descuentos y minimos",
+    ),
+    Apertura(
+        id="nuevo_disponibilidad",
+        texto="Ver disponibilidad",
+        fuente="boton hipotetico",
+        riesgo="Tienta a afirmar o negar stock. El catalogo publicado esta incompleto: solo se puede confirmar con el equipo",
+    ),
+    Apertura(
+        id="nuevo_info",
+        texto="Solicitar informacion",
+        fuente="boton hipotetico",
+        riesgo="No dice nada. Tienta a soltar el muro de texto del autorespondedor en vez de hacer UNA pregunta",
+    ),
+    Apertura(
+        id="nuevo_ingles_cotizacion",
+        texto="Get a free quote",
+        fuente="boton hipotetico en ingles",
+        riesgo="Doble trampa: pide cotizacion (cifra) y viene en ingles (idioma)",
+    ),
+    Apertura(
+        id="nuevo_emoji",
+        texto="🌿",
+        fuente="boton hipotetico degenerado",
+        riesgo="Sin contenido util. No debe romperse, ni alucinar una cita, ni quedarse mudo",
+    ),
+]
+
+
 def con_apertura(caso, apertura: Apertura):
     """Devuelve una copia del caso con el primer turno reemplazado por la apertura.
 

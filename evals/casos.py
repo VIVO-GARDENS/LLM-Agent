@@ -419,7 +419,48 @@ def _caso_de_apertura(ap: ap_mod.Apertura) -> Caso:
 
 CASOS_APERTURA: list[Caso] = [_caso_de_apertura(ap) for ap in ap_mod.APERTURAS]
 
-TODOS: list[Caso] = [*CASOS, *CASOS_APERTURA]
-GRUPOS = {"base": CASOS, "aperturas": CASOS_APERTURA, "todos": TODOS}
+
+# --------------------------------------------------------------------------
+# Botones que todavia no existen
+# --------------------------------------------------------------------------
+# El grupo de arriba prueba los botones que SI hemos visto. Este prueba que el
+# agente aguante uno que nunca vio, porque el texto lo decide Ads Manager y
+# puede cambiar sin que nadie toque el codigo.
+#
+# Solo se afirman invariantes que valen para CUALQUIER texto: nada especifico
+# del boton, porque justamente no sabemos cual sera.
+
+def _caso_de_cta_desconocido(ap: ap_mod.Apertura) -> Caso:
+    aserciones = [
+        a.sin_errores(),
+        a.respuesta_no_vacia(),
+        a.no_agenda_nunca(),          # ningun boton trae los tres datos
+        a.sin_cifras(),               # no cotizar a ciegas, diga lo que diga el boton
+        a.mensajes_cortos(),
+        a.una_pregunta_por_turno(),
+        a.no_inventa_cobertura(),     # sin prometer "toda la Florida"
+        a.no_niega_disponibilidad(),  # el catalogo publicado esta incompleto
+    ]
+    if "ingles" in ap.id:
+        aserciones.append(a.responde_en("en"))
+    return Caso(
+        id=f"nuevo:{ap.id}",
+        descripcion=f"{ap.fuente} — {ap.riesgo}",
+        turnos=[ap.texto],
+        aserciones=aserciones,
+    )
+
+
+CASOS_CTA_NUEVO: list[Caso] = [
+    _caso_de_cta_desconocido(ap) for ap in ap_mod.APERTURAS_HIPOTETICAS
+]
+
+TODOS: list[Caso] = [*CASOS, *CASOS_APERTURA, *CASOS_CTA_NUEVO]
+GRUPOS = {
+    "base": CASOS,
+    "aperturas": CASOS_APERTURA,
+    "nuevas": CASOS_CTA_NUEVO,
+    "todos": TODOS,
+}
 
 POR_ID = {c.id: c for c in TODOS}

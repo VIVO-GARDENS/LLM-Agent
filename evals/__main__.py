@@ -3,8 +3,10 @@
 
 Sale con codigo 1 si algun caso falla, para que sirva de compuerta en CI.
 
-  python -m evals                          todo (32 casos)
-  python -m evals --grupo aperturas        solo el barrido de botones (13 casos)
+  python -m evals                          todo (41 casos)
+  python -m evals --grupo base             solo los casos de conversacion (19)
+  python -m evals --grupo aperturas        los botones que SI hemos visto (16)
+  python -m evals --grupo nuevas           botones hipoteticos, nunca vistos (6)
   python -m evals --caso precio_directo    un caso
   python -m evals --grupo base --apertura cta_precio
         los casos base pero entrando por el boton "Cuanto cuesta?"
