@@ -492,6 +492,10 @@ esa es la politica vigente. El detalle esta en el archivo local.
 
 ## 15. Estado final medido (2026-09-18)
 
+> Los numeros de abajo son de ese momento y siguen siendo validos como
+> historia. Para el estado actual, ver la seccion 16: la suite crecio a 41
+> casos.
+
 Todo medido con **3 corridas por cambio**, nunca con una sola: la suite tiene
 varianza real y una pasada no distingue una mejora del ruido.
 
@@ -531,3 +535,68 @@ Ejemplos detectados hoy:
 
 Vale mas cerrar esa brecha que subir el marcador: hoy el numero puede mejorar
 sin que el comportamiento mejore.
+
+---
+
+## 16. Flexibilidad ante cambios de CTA (2026-09-18)
+
+El texto de los botones **no vive en el codigo**: lo decide Ads Manager. Luis
+puede cambiar uno un martes y, hasta hoy, el banco entero habria seguido en
+verde sin enterarse, porque solo ejercitaba los 16 textos ya observados.
+
+### Lo que se agrego
+
+- `evals/aperturas.py` -> **`APERTURAS_HIPOTETICAS`**: 6 botones **inventados a
+  proposito**, en una lista aparte de `APERTURAS`. La separacion no es estetica:
+  `APERTURAS` declara que todos sus textos son reales y copiados literal de DMs,
+  y esos textos se citan como evidencia. Los inventados no pueden mezclarse ahi.
+- `evals/casos.py` -> grupo **`nuevas`** (`python -m evals --grupo nuevas`),
+  incluido en `todos`. Un test de robustez que nadie corre no sirve de nada.
+
+Solo afirma invariantes que valen para **cualquier** texto futuro: no agendar
+(ningun boton trae los tres datos), no dar cifras, mensajes cortos, una sola
+pregunta, no prometer cobertura y no negar disponibilidad.
+
+Los seis se eligieron como **trampas**, no como relleno: "Reservar ahora" tienta
+a agendar en el turno 1; "Obtener oferta" a inventar un descuento; "Ver
+disponibilidad" a afirmar o negar stock; "Solicitar informacion" a soltar el
+muro; "Get a free quote" a cotizar en el idioma equivocado; un emoji suelto a
+romperse.
+
+### Resultado: 6/6 en las tres corridas completas
+
+El agente no cayo en ninguna trampa. Pero el ejercicio encontro **dos fallos
+reales que ningun otro caso veia**, y los dos se corrigieron en el prompt:
+
+| fallo | causa | medicion |
+|---|---|---|
+| "Get a free quote" respondia en **espanol** | con una frase completa en ingles si reflejaba el idioma; con un **boton corto** ganaba el espanol por defecto. Y los CTA son cortos por naturaleza | tras extender la regla de idioma a mensajes cortos: **6/6 en ingles** |
+| Un emoji suelto disparaba **dos preguntas** | abria con una pregunta de relleno ("¿En que te puedo ayudar?") y despues la de verdad | tras prohibir el relleno: de **3/6 fallando a 0/6** |
+
+### No hubo regresion (medido, no supuesto)
+
+Las corridas completas dieron 33/31/34 sobre los 35 casos previos, contra una
+referencia de 34/34/33. La media bajaba, pero los rangos se solapan y la
+varianza de esta suite ya estaba medida en +-2-4 casos.
+
+Se resolvio con un **A/B** sobre los cuatro casos sospechosos, comparando el
+prompt actual contra el de `HEAD`:
+
+    A (prompt actual)  = 12/12
+    B (sin los cambios) = 10/12
+
+Los fallos aparecieron en el brazo **sin** los cambios. Conclusion sostenible:
+**no hay evidencia de regresion**; el 33/31/34 fue varianza. Con 12 ejecuciones
+tampoco se afirma lo contrario (que los cambios mejoren esos casos).
+
+### Estado de la suite
+
+**41 casos** = 19 de conversacion + 16 aperturas reales + 6 botones hipoteticos.
+Total por corrida: 39/41, 37/41, 40/41.
+
+### Pendiente de vigilar
+
+`nuevo:nuevo_reservar` fallo `una_pregunta_por_turno` **1 de 6** veces corriendo
+el grupo aislado, y 3/3 en las corridas completas. Una sola ocurrencia no
+justifica tocar el prompt; si reaparece, es la misma conducta de la pregunta de
+relleno filtrandose a baja frecuencia.
