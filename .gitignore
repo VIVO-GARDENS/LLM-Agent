@@ -1,0 +1,32 @@
+# Credenciales — nunca, bajo ninguna circunstancia
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Memoria de precios: contiene cotizaciones del negocio y contexto de
+# conversaciones con clientes. Se siembra sola desde agente/precios.py.
+memoria/
+
+# Resultados de corridas de evaluación (traen transcripciones)
+*.json
+!.github/**/*.json
+corrida*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Herramientas
+.playwright-mcp/
+.pytest_cache/
+.vscode/
+.idea/
+
+# Sistema
+Thumbs.db
+.DS_Store

@@ -1,0 +1,54 @@
+# Dos trabajos separados a propósito.
+#
+# `frio` corre en cada push: prueba las aserciones contra trazas construidas a
+# mano, sin llamar a la API. Es gratis, tarda un segundo y es lo que impide que
+# una aserción rota deje pasar todo el banco en verde.
+#
+# `vivo` cuesta dinero real, así que no se dispara solo. Se lanza a mano o de
+# madrugada, y necesita la key en los secrets del repo.
+
+name: evals
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 1"   # lunes 07:00 UTC
+
+jobs:
+  frio:
+    name: Aserciones (sin API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "anthropic>=1.0,<2.0"
+      - name: Probar las aserciones y el corredor
+        run: python -m evals.prueba_aserciones
+      - name: Los casos deben poder construirse
+        run: python -m evals --listar
+
+  vivo:
+    name: Conversaciones reales (gasta créditos)
+    runs-on: ubuntu-latest
+    # Solo a mano o en el cron semanal, nunca en cada push.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "anthropic>=1.0,<2.0"
+      - name: Correr el banco completo
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m evals --json corrida.json
+      - name: Guardar el reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrida-evals
+          path: corrida.json

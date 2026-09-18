@@ -1,0 +1,11 @@
+# Núcleo del agente y evaluaciones.
+# El SDK 1.x está construido sobre httpx2 y exige Python >= 3.10.
+anthropic>=1.0,<2.0
+
+# Servicio HTTP (Fase 3). El núcleo y las evals no lo necesitan: si solo vas a
+# correr `python -m evals`, basta con anthropic.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+
+# Estado en producción (Fase 3). En local la memoria de precios usa JSON.
+psycopg[binary]>=3.2
