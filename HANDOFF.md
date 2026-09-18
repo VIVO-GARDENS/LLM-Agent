@@ -600,3 +600,72 @@ Total por corrida: 39/41, 37/41, 40/41.
 el grupo aislado, y 3/3 en las corridas completas. Una sola ocurrencia no
 justifica tocar el prompt; si reaparece, es la misma conducta de la pregunta de
 relleno filtrandose a baja frecuencia.
+
+---
+
+## 17. Cobertura de aserciones: cerrada (2026-09-18)
+
+La seccion 16 dejaba anotada una deuda que valia mas que el marcador:
+`mensajes_cortos` y `una_pregunta_por_turno` **solo corrian donde alguien se
+acordo de declararlas**. Un muro de texto o tres preguntas de golpe pasaban sin
+que nadie se enterara en los casos que las omitian. El banco podia dar verde
+por omision, no por comportamiento.
+
+### Como quedo
+
+`_aserciones_base()` en `evals/casos.py` define los invariantes universales, y
+`Caso.__post_init__` los anade al caso que no los declare ya, deduplicando por
+nombre. Va en `__post_init__` y no en la construccion de las listas **a
+proposito**: asi tambien alcanza a las copias que hace `replace()`, y
+`con_apertura()` genera una por cada boton -- justo las que mas facil se
+quedarian sin cubrir.
+
+Hay salida: `Caso(sin_base=("mensajes_cortos",))` exime un invariante **por
+nombre**. Existe para que quien necesite saltarse uno lo declare y lo
+justifique, en vez de borrar el mecanismo cuando le estorbe.
+
+### Que entra y que no: decidido midiendo, no a ojo
+
+Cada candidata se corrio contra las **234 respuestas ya grabadas** de corridas
+anteriores, para ver si disparaba sobre respuestas correctas ANTES de
+universalizarla.
+
+| asercion | en la base | por que |
+|---|---|---|
+| `sin_errores`, `respuesta_no_vacia` | si | nunca hay excusa |
+| `mensajes_cortos` | si | es un DM de Instagram, siempre |
+| `una_pregunta_por_turno` | si | ya se salta el turno en que agenda |
+| `no_inventa_cobertura` | si | **0 disparos en 234 respuestas** |
+| `sin_cifras` | no | hay casos que DEBEN cotizar (`venta_completa`) |
+| `no_niega_disponibilidad` | **no** | ver abajo |
+
+⚠️ **El hallazgo mas util de este tramo.** `no_niega_disponibilidad` parecia
+inocua y es la peligrosa: dispara sobre `no_es_cliente`, donde el agente
+responde *"no manejamos ese tipo de contrataciones"* hablando de un **acuerdo
+comercial** con una agencia, no de stock de plantas. El patron
+`no (la|lo|las|los) (tenemos|manejamos|vendemos)` no distingue los dos sentidos
+de "no manejamos". Universalizarla habria fabricado un fallo sobre una
+respuesta correcta.
+
+La intuicion estaba invertida: se sospechaba de `no_inventa_cobertura` (cero
+disparos) y no de esta (un falso positivo real). Por eso se mide.
+
+### Resultado
+
+Cobertura: **41/41 casos** para los cinco invariantes, cero duplicados, 340
+aserciones en el banco.
+
+    con cobertura universal:  39, 40, 39 / 41
+    sin ella (medicion previa): 39, 37, 40 / 41
+
+**Ningun fallo nuevo.** En estas corridas el banco pasaba por merito. Ojo con
+leerlo de mas: tres corridas no prueban que el agente nunca viole esos
+invariantes, solo que no lo hizo en ~123 ejecuciones de caso. El valor del
+guardarrail es hacia adelante.
+
+### Pendiente de vigilar
+
+`nuevo:nuevo_reservar` fallo `una_pregunta_por_turno` en **dos mediciones
+distintas** (1/6 y 1/3). Ya no es una observacion suelta, pero sigue siendo
+baja frecuencia: es la conducta de la pregunta de relleno filtrandose. Si sube,
+se ataca; no se toca el prompt con evidencia tan fina.

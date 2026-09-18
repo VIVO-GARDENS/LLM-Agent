@@ -47,6 +47,37 @@ FOTO_PATIO = (
 )
 
 
+# Invariantes que valen para TODOS los casos, sin excepcion razonable.
+#
+# Existen porque la cobertura por enumeracion no aguanta: durante meses
+# `mensajes_cortos` y `una_pregunta_por_turno` solo corrian donde alguien se
+# acordo de declararlas, asi que un muro de texto o tres preguntas de golpe
+# pasaban sin que nadie se enterara en los casos que las omitian. El banco daba
+# verde por omision, no por comportamiento.
+#
+# La lista es corta A PROPOSITO. Solo entra lo que no admite discusion:
+# Que entra y que no se decidio MIDIENDO, no a ojo: cada candidata se corrio
+# contra las 234 respuestas ya grabadas de las corridas, para ver si disparaba
+# sobre respuestas correctas antes de universalizarla.
+#
+#   - sin_cifras NO entra: hay casos que deben cotizar (venta_completa).
+#   - no_inventa_cobertura SI entra: 0 disparos en 234 respuestas. Se sospechaba
+#     que su patron "(claro|si) + (vamos|atendemos)" marcaria un "¡Claro! Vamos
+#     a tu casa", pero eso no ocurrio ni una vez.
+#   - no_niega_disponibilidad NO entra, y esta es la leccion: dispara sobre
+#     `no_es_cliente`, donde el agente responde "no manejamos ese tipo de
+#     contrataciones" hablando de un ACUERDO COMERCIAL con una agencia, no de
+#     stock. El patron no distingue los dos sentidos de "no manejamos".
+def _aserciones_base() -> list[a.Asercion]:
+    return [
+        a.sin_errores(),
+        a.respuesta_no_vacia(),
+        a.mensajes_cortos(),          # es un DM de Instagram, siempre
+        a.una_pregunta_por_turno(),   # ya se salta el turno en que agenda
+        a.no_inventa_cobertura(),     # nunca prometer "toda la Florida"
+    ]
+
+
 @dataclass
 class Caso:
     id: str
@@ -58,6 +89,27 @@ class Caso:
     # Cuando el agente agenda, la conversacion termino: los turnos que sigan
     # ya no aplican. Solo se apagaria para probar que hace despues de agendar.
     detener_al_agendar: bool = True
+    # Exencion explicita de un invariante base, por nombre. Existe para que
+    # quien necesite saltarse uno lo declare y lo justifique, en vez de borrar
+    # el mecanismo entero cuando le estorbe.
+    sin_base: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Anade los invariantes base que el caso no declare ya.
+
+        Va aqui y no en la construccion de las listas para que tambien alcance
+        a las copias hechas con `replace()` -- `con_apertura()` genera una por
+        cada boton, y esas son justo las que mas facil se quedarian sin cubrir.
+        """
+        ya = {getattr(x, "nombre", getattr(x, "__name__", "")) for x in self.aserciones}
+        for base in _aserciones_base():
+            nombre = getattr(base, "nombre", "")
+            raiz = nombre.split("(")[0]
+            if nombre in ya or raiz in {n.split("(")[0] for n in ya}:
+                continue
+            if raiz in self.sin_base or nombre in self.sin_base:
+                continue
+            self.aserciones.append(base)
 
 
 CASOS: list[Caso] = [
