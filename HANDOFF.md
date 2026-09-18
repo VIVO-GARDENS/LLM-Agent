@@ -379,7 +379,7 @@ que desde la lista no se puede contar cuántas vinieron de la pauta.
 Hasta hoy nada se habia ejecutado contra la API. Al hacerlo aparecieron cuatro
 bugs que solo se ven corriendo, y el banco dio su primer numero real.
 
-**Resultado: 22/32 casos.** Costo de la corrida $0.096 ($0.00214 por turno),
+**Resultado de esa primera corrida: 22/32 casos.** (Ver la seccion 15: tras los arreglos quedo en 31/32.) Costo de la corrida $0.096 ($0.00214 por turno),
 proyeccion a 613 mensajes/mes: **$1.31**. El caché funciona: 394.920 tokens
 leidos del prefijo cacheado.
 
@@ -487,3 +487,47 @@ esa es la politica vigente. El detalle esta en el archivo local.
   deseado. Sirve para filtrar no-clientes.
 - El muro automatico **tambien se dispara** sobre respuestas a historias, sobre
   spam y dentro de solicitudes de mensajes ni siquiera aceptadas.
+
+---
+
+## 15. Estado final medido (2026-09-18)
+
+Todo medido con **3 corridas por cambio**, nunca con una sola: la suite tiene
+varianza real y una pasada no distingue una mejora del ruido.
+
+| momento | sobre los 32 casos originales |
+|---|---|
+| antes de tocar nada | 22/32 |
+| tras los arreglos de prompt (cierre, brevedad, idioma, despedida) | 29, 29, 28 |
+| **tras corregir los dos falsos positivos de las evals** | **31, 31, 30** |
+
+La suite crecio a **35 casos** con los tres CTAs nuevos del anuncio, y ahi da
+**34, 34, 33**. Los tres casos nuevos pasan **3/3 cada uno**: los dos en ingles
+responden en ingles, y el de macetas consulta al equipo en vez de prometer stock.
+
+### Lo que sigue fallando, y por que
+
+- `precio_de_una_planta` **0/3** — `deriva_al_equipo`. Falla **por decision**:
+  se opto por dejar la asercion intacta y anotar el fallo, en vez de ablandar la
+  prueba para que el marcador subiera.
+- `post_compartido_precio` **2/3** — `pregunta_cual_planta`. Paso de fallar
+  siempre a fallar de forma intermitente. Este si es un fallo real del agente:
+  ante un carrusel de varios proyectos, una de cada tres veces no pregunta cual
+  planta y da por sentada una. Es el siguiente a atacar.
+
+### ⚠️ Deuda conocida: las aserciones no se aplican de forma uniforme
+
+Varias reglas solo corren en los casos donde alguien se acordo de anadirlas.
+Ejemplos detectados hoy:
+
+- `mensajes_cortos` y `una_pregunta_por_turno` no estan en todos los casos, asi
+  que un muro de texto o tres preguntas de golpe pasarian desapercibidos fuera
+  de los casos que si las declaran. (Un barrido transversal sobre 35 casos x 3
+  corridas dio limpio, pero eso es suerte, no cobertura.)
+- `cta_ingles_plantas_premium` pasa mientras el agente **recita el catalogo
+  entero**, que es exactamente el riesgo que describe la nota de su apertura
+  hermana `cta_que_tipos_plantas`. El riesgo esta escrito; ninguna asercion lo
+  vigila.
+
+Vale mas cerrar esa brecha que subir el marcador: hoy el numero puede mejorar
+sin que el comportamiento mejore.
