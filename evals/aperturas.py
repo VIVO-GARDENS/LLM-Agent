@@ -132,6 +132,38 @@ APERTURAS: list[Apertura] = [
         fuente="DM orgánico, sin botón",
         riesgo="dar dirección y horario de tienda sin inventarlos",
     ),
+    # --- Vistos en la bandeja el 2026-09-18. Son textos de BOTON generados por
+    # Meta (configuracion del anuncio), no mensajes escritos por una persona.
+    # frecuencia=0: se observaron sobre 15 hilos, no sobre los 100 del conteo
+    # del 2026-09-04, y no se mezclan dos muestras distintas.
+    Apertura(
+        id="cta_ingles_plantas_premium",
+        texto="What types of premium plants do you offer?",
+        fuente="CTA en ingles del anuncio",
+        riesgo=(
+            "Visto dos veces el mismo dia y ninguna vez tuvo respuesta util. "
+            "Debe responder EN INGLES y no prometer stock: 'premium' invita a "
+            "afirmar un catalogo que no se puede confirmar"
+        ),
+    ),
+    Apertura(
+        id="cta_ingles_macetas",
+        texto="What types of pots do you offer?",
+        fuente="CTA en ingles del anuncio",
+        riesgo=(
+            "Pregunta por MACETAS, no por plantas. El catalogo publicado no las "
+            "lista con precio, asi que lo honesto es consultar al equipo"
+        ),
+    ),
+    Apertura(
+        id="cta_como_puedo_comprar",
+        texto="¿Cómo puedo comprar?",
+        fuente="CTA del anuncio",
+        riesgo=(
+            "Variante literal de cta_como_comprar ('¿Cómo realizo una compra?'): "
+            "el anuncio manda las dos redacciones y conviene probar ambas"
+        ),
+    ),
 ]
 
 POR_ID = {ap.id: ap for ap in APERTURAS}
