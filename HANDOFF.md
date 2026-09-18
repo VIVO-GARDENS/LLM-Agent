@@ -416,3 +416,74 @@ ruido: cualquier ajuste de prompt hay que validarlo con varias corridas.
 Nota: `post_compartido_precio` se evaluo como posible asercion contradictoria y
 **no lo es**. El post es un carrusel de resultados, no una planta: adivinar cual
 es exactamente lo que la asercion atrapa. El agente esta mal ahi.
+
+---
+
+## 14. Lectura de DMs reales (2026-09-18)
+
+Metodo: se leyeron completos los **15 hilos de la bandeja Primary**, mas
+Solicitudes y Solicitudes ocultas, desde el Chrome del negocio.
+
+> Las cifras exactas, las plantillas textuales y las aperturas escritas por
+> personas **NO estan en este archivo**: viven en `memoria/dms-2026-09-18.md`,
+> que esta en `.gitignore`. Este repo es publico y su regla es que aqui no hay
+> datos de clientes. Aqui quedan solo agregados y diagnostico.
+
+### ⚠️ Correcciones a la seccion 12
+
+- El barrido anterior conto ~155 conversaciones. Hoy Primary carga **15 hilos**
+  y deja de crecer. No se pudo confirmar que 15 sea el total: el centinela de
+  "cargando" sigue presente aunque el scroller este al fondo. Trata 15 como "lo
+  que se puede cargar con scroll sintetico", no como "todo lo que hay".
+- **El trafico de la pauta NO cae en Solicitudes.** Todos los hilos marcados
+  como respuesta a un anuncio estan en Primary. Solicitudes es spam y B2B.
+
+### El diagnostico central cambia
+
+La seccion 11 decia que el problema es **un** autorespondedor que suelta un muro
+de texto. Es incompleto. Hay **al menos tres respuestas automaticas distintas**,
+disparadas segun el boton que toco el cliente, y se repiten identicas entre
+hilos distintos -- por eso se sabe que son plantillas y no personas.
+
+El problema real no es *"nadie contesta"*. Es que **contesta un enlatado y
+despues nadie hace seguimiento**. Una de esas plantillas ademas pide los tres
+datos de golpe, justo lo que `una_pregunta_por_turno` prohibe.
+
+⚠️ Preguntarle a Luis si esas plantillas las configuro el o si ya hay otra
+automatizacion corriendo: el agente tendria que **reemplazarlas**, no sumarse.
+
+### El bloqueador #1 esta resuelto en los datos
+
+El equipo **si cotiza cifras por DM**, con desglose de lo que incluye la
+modalidad "listo en casa" (planta, maceta, tierra, labor, vitaminas y entrega).
+
+⚠️ Correccion: las cifras leidas hoy **ya estaban** en `agente/precios.py` como
+observaciones minadas del historico, y `MONTOS_AUTORIZADOS` las cubre -- es un
+conjunto **derivado** (`rango_para(o.monto)` sobre cada observacion), asi que
+guarda extremos de rango, no montos crudos. La lectura de hoy **corrobora** los
+datos existentes; no los amplia.
+
+Lo unico que podria ser nuevo es la **forma de cotizar un proyecto por unidad**,
+con un desglose de seis items por planta instalada. Falta que Luis confirme si
+esa es la politica vigente. El detalle esta en el archivo local.
+
+### Fugas medidas
+
+- **Ingles sin responder.** Tres hilos abren en ingles (plantas premium, rango
+  de precio, macetas). Uno quedo en "Visto". Ninguno recibio respuesta util.
+- **Fuera de cobertura sin manejar.** Un cliente pregunto la direccion y dijo
+  vivir en una ciudad fuera del area de Miami. Solo se disparo el muro. Es el
+  caso `fuera_de_miami` ocurriendo de verdad.
+- **Dos CTAs en el mismo hilo.** Varios clientes tocan un boton y despues otro.
+  Ningun caso de `evals/` cubre un segundo CTA llegando tras el primero.
+
+### Otros hallazgos
+
+- **La etiqueta "cliente potencial" de Meta es ruido**: la puso sobre un
+  mayorista de joyeria, una agente de real estate y una cuenta que solo reenvia
+  reels sin relacion con plantas.
+- **Dos marcadores de anuncio distintos**, y no significan lo mismo: uno indica
+  un lead entrante real; el otro aparecio solo en dos hilos y ambos eran B2B no
+  deseado. Sirve para filtrar no-clientes.
+- El muro automatico **tambien se dispara** sobre respuestas a historias, sobre
+  spam y dentro de solicitudes de mensajes ni siquiera aceptadas.
