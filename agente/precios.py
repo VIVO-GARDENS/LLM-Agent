@@ -75,7 +75,13 @@ OBSERVACIONES: list[Observacion] = [
     # como orden de magnitud interno; el agente NO las usa para cotizar.
     Observacion("planta pequena o comun", "sola", 80, 3, "piso; tambien 'si la recoge 80'"),
     Observacion("planta mediana", "sola", 250, 4, "techo del rango 'desde 80 hasta 250'"),
-    Observacion("planta grande", "sola", 650, 1, "cifra suelta, sin contexto de especie"),
+    # ⚠️ NO ASCENDER A nombrada=True. El dueño del proyecto zanjo el 2026-09-18
+    # que NO hay un 650 fijo: fue una cotizacion puntual de esa planta. Ademas
+    # un DM del 2026-09-18 lo muestra como "cada planta instalada" (planta,
+    # maceta, tierra, labor, vitaminas, delivery), o sea con OTRA modalidad que
+    # la registrada aqui. Dos lecturas del mismo numero: no sirve de ancla.
+    Observacion("planta grande", "sola", 650, 1,
+                "cifra suelta, sin contexto de especie; lectura en disputa"),
     Observacion("ejemplar grande instalado", "listo_en_casa", 2200, 1,
                 "dicho como 'como el del video': fuera de esa conversacion no significa nada"),
 ]
