@@ -50,7 +50,8 @@ Todo esto esta en `agente/prompt.py`. Si el sitio cambia, cambia el prompt.
 | Garantia | no garantizan la planta despues de entregada | /faq |
 | Idiomas | sitio bilingue EN/ES, arranca en ingles | header |
 
-⚠️ **Conflictos sin resolver** (preguntarle a Luis):
+⚠️ **Conflictos sin resolver** (los decide el dueño del proyecto, que es quien
+tiene los accesos; Luis hace los videos y parte del seteo de campañas):
 - Yelp dice telefono (786) 498-9921 y horario lun-sab 9-7 / dom 10-6. El sitio
   dice otra cosa. Se tomo el sitio como fuente; confirmar cual es el vigente.
 - El sitio manda todo a WhatsApp. El agente vive en DMs de Instagram. Falta
@@ -223,7 +224,7 @@ tool calling es igual de confiable para esta tarea.
 - El repo puede ser público. **Nada de este repo contiene credenciales**, y así
   debe seguir: `.env` en `.gitignore` desde el primer commit.
 - **No copiar aquí datos de la cuenta publicitaria** (ids de campaña, gasto,
-  métricas de Luis). Los números del negocio que sí se pueden contar en el
+  métricas de la cuenta). Los números del negocio que sí se pueden contar en el
   README son los agregados de la sección 2, sin ids.
 - Preguntar al usuario si Vivo Gardens está de acuerdo con que el repo lleve su
   nombre. Si prefiere no nombrarlos, describirlo como "un vivero en Miami" y
@@ -273,7 +274,8 @@ La regla real son dos caminos:
 
 En código: `RANGO_PLANTAS_MIN/MAX` en `agente/prompt.py`, y las aserciones
 `solo_precios_autorizados()` / `da_rango_de_plantas()` / `sin_cifras()`.
-⚠️ Falta que **Luis confirme que el rango sigue vigente**.
+⚠️ Falta **confirmar que el rango sigue vigente**. Lo decide el dueño del
+proyecto.
 
 ### El autorespondedor actual es el problema
 
@@ -355,7 +357,7 @@ conversación. Lo que el equipo cotizó por DM:
 
 Con n=1 parecía una regla; con n=4 se ve que es criterio humano. Por eso
 `RANGO_PLANTAS = None` en `agente/prompt.py`: mientras no haya lista de precios
-de Luis, **el agente no da ninguna cifra** y ofrece que el equipo pase el
+confirmada, **el agente no da ninguna cifra** y ofrece que el equipo pase el
 precio exacto. Las aserciones de precio se activan solas cuando se configure
 el rango.
 
@@ -449,8 +451,9 @@ El problema real no es *"nadie contesta"*. Es que **contesta un enlatado y
 despues nadie hace seguimiento**. Una de esas plantillas ademas pide los tres
 datos de golpe, justo lo que `una_pregunta_por_turno` prohibe.
 
-⚠️ Preguntarle a Luis si esas plantillas las configuro el o si ya hay otra
-automatizacion corriendo: el agente tendria que **reemplazarlas**, no sumarse.
+⚠️ Queda por ubicar quien configuro esas plantillas -- Luis hace parte del seteo
+de campañas -- y si hay otra automatizacion corriendo. La decision de
+**reemplazarlas** es del dueño del proyecto, que tiene los accesos.
 
 ### El bloqueador #1 esta resuelto en los datos
 
@@ -464,8 +467,20 @@ guarda extremos de rango, no montos crudos. La lectura de hoy **corrobora** los
 datos existentes; no los amplia.
 
 Lo unico que podria ser nuevo es la **forma de cotizar un proyecto por unidad**,
-con un desglose de seis items por planta instalada. Falta que Luis confirme si
-esa es la politica vigente. El detalle esta en el archivo local.
+con un desglose de seis items por planta instalada.
+
+**Decidido el 2026-09-18 por el dueño del proyecto:**
+
+- **Proyectos: no se cotiza por DM.** Se va a la casa, se toman medidas y se
+  cotiza ahi, porque sin ver el espacio no se puede dar la mejor solucion. La
+  regla de `sin_cifras` para proyecto se mantiene tal cual.
+- **Producto: la modalidad manda.** Antes de dar cualquier cifra el agente tiene
+  que establecer si es **con maceta o sin maceta** y calcular sobre eso. Es lo
+  que ya hacen el campo `modalidad` del schema y la asercion
+  `precio_con_modalidad`: el criterio del negocio confirma el diseño, no lo
+  cambia.
+
+El detalle de lo observado esta en el archivo local.
 
 ### Fugas medidas
 
@@ -540,7 +555,7 @@ sin que el comportamiento mejore.
 
 ## 16. Flexibilidad ante cambios de CTA (2026-09-18)
 
-El texto de los botones **no vive en el codigo**: lo decide Ads Manager. Luis
+El texto de los botones **no vive en el codigo**: lo decide Ads Manager. Se
 puede cambiar uno un martes y, hasta hoy, el banco entero habria seguido en
 verde sin enterarse, porque solo ejercitaba los 16 textos ya observados.
 
