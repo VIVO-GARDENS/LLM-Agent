@@ -1,0 +1,56 @@
+# n8n + Postgres para el agente de Vivo Gardens.
+#
+# Postgres no es opcional: la arquitectura decidida el 2026-09-18 pone el estado
+# de las conversaciones y la deduplicacion por `mid` en n8n, no en el servicio.
+# Con la base SQLite por defecto eso se pierde al recrear el contenedor.
+#
+#   docker compose up -d      levantar
+#   docker compose logs -f    ver que arranco
+#   docker compose down       apagar (los datos quedan en los volumenes)
+#
+# Los secretos salen de ../.env, que esta en .gitignore. NUNCA se escriben aqui.
+#
+# ⚠️ Aqui NO se usa interpolacion `${...}` a proposito. Compose la resuelve antes
+# de crear el contenedor y solo mira su propio entorno o un .env JUNTO a este
+# archivo -- no el de `env_file`. Mezclarlos hace que falle pidiendo una variable
+# que si esta en ../.env. Todo se inyecta por `env_file` y listo. En el
+# healthcheck se escribe `$$VAR` para que lo expanda el shell del contenedor.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: ../.env
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      # n8n arranca antes que la base y se cae. Esperar a que responda de verdad.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: ../.env
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      GENERIC_TIMEZONE: America/Bogota
+      TZ: America/Bogota
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+    ports:
+      - "5678:5678"
+    volumes:
+      - datos_n8n:/home/node/.n8n
+
+volumes:
+  datos_postgres:
+  datos_n8n:
