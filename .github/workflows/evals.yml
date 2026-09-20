@@ -25,9 +25,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install "anthropic>=1.0,<2.0"
+      - run: pip install "anthropic>=1.0,<2.0" "fastapi>=0.115" "pydantic>=2"
       - name: Probar las aserciones y el corredor
         run: python -m evals.prueba_aserciones
+      - name: Probar el contrato del servicio HTTP
+        run: python -m evals.prueba_servicio
       - name: Los casos deben poder construirse
         run: python -m evals --listar
 
