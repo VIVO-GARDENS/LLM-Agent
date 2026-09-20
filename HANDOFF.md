@@ -119,7 +119,7 @@ agente/conversacion.py    estado por sender_id + deduplicación por mid
 2. `ejecutar.py` — CLI para conversar con el agente a mano
 3. `README.md` — el que va a leer un reclutador
 4. `.env.example`, `.gitignore`, `requirements.txt`
-5. `n8n/README.md` — cómo el núcleo se mapea a los nodos
+5. ~~`n8n/README.md`~~ — hecho, ver la seccion 18
 6. Despliegue real (InstantDM + VPS + n8n) — **al final, no antes**
 
 ---
@@ -684,3 +684,38 @@ guardarrail es hacia adelante.
 distintas** (1/6 y 1/3). Ya no es una observacion suelta, pero sigue siendo
 baja frecuencia: es la conducta de la pregunta de relleno filtrandose. Si sube,
 se ataca; no se toca el prompt con evidencia tan fina.
+
+---
+
+## 18. La integracion: n8n orquesta, Python responde (2026-09-18)
+
+Habia una contradiccion sin resolver. El docstring de `prompt.py` decia que *"el
+nodo HTTP Request de n8n usa exactamente este mismo system prompt y este mismo
+tool"* -- o sea n8n llamando a Anthropic directo. Pero el system prompt **se
+construye en Python en cada llamada**: lleva la fecha de hoy, los precios
+aprendidos de ESE cliente, el inventario y el contexto del post compartido. Un
+body fijo en un nodo no reproduce eso, y `normalizar()`, la memoria de precios,
+el inventario y la busqueda de publicaciones no se ejecutarian nunca.
+
+**Resuelto:** n8n orquesta -- webhook, 200 inmediato, dedup por `mid`, estado en
+Postgres, Send API, WhatsApp al equipo -- y llama a `servicio.py`, que envuelve
+`AgenteVivoGardens.responder()`. Asi el banco de 41 casos prueba exactamente lo
+que corre en produccion, que es lo que el README promete.
+
+`servicio.py` es **sin estado a proposito**: el historial viaja en la peticion y
+vuelve en la respuesta para que n8n lo persista. Se puede reiniciar, escalar o
+duplicar sin perder conversaciones, y la unica fuente de verdad es Postgres.
+
+El mapeo nodo por nodo esta en `n8n/README.md`.
+
+⚠️ **El servicio NO es el webhook de Instagram.** Instagram corta a los 10s y
+reenvia el evento; una llamada al modelo tarda segundos. El 200 lo da n8n antes
+de pensar. Conectarlo directo hace que el cliente reciba la respuesta dos o tres
+veces.
+
+### Pendiente, y no depende del codigo
+
+El **App ID**, el **`IG_VERIFY_TOKEN`** (cadena libre que debe coincidir con el
+panel de Meta) y que este aprobado el permiso
+**`instagram_business_manage_messages`**. Los tiene quien administra la app en
+Meta App Developer.
