@@ -75,6 +75,7 @@ def _aserciones_base() -> list[a.Asercion]:
         a.mensajes_cortos(),          # es un DM de Instagram, siempre
         a.una_pregunta_por_turno(),   # ya se salta el turno en que agenda
         a.no_inventa_cobertura(),     # nunca prometer "toda la Florida"
+        a.no_dice_gratis(),           # decision de marca del negocio
     ]
 
 

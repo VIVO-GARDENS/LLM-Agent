@@ -591,6 +591,20 @@ def no_contiene(patrones: list[str], nombre: str) -> Asercion:
     return _nombrar(_f, nombre)
 
 
+def no_dice_gratis() -> Asercion:
+    """La palabra "gratis" no se usa. Decision de marca del negocio (2026-09-20).
+
+    La visita SIGUE sin cobro y hay que ofrecerla -- de eso se encarga
+    `ofrece_visita_gratis`, que acepta "sin costo". Las dos juntas dicen la
+    regla completa: prometela, pero no con esa palabra.
+
+    Va en los invariantes base porque es una regla de marca: vale en los 41
+    casos, no solo donde alguien se acuerde de declararla. Cuando se midio,
+    el agente la decia en el 19% de las respuestas.
+    """
+    return no_contiene([r"\bgratis", r"\bfree\b"], "no_dice_gratis")
+
+
 def ofrece_visita_gratis() -> Asercion:
     return contiene_alguno(
         [r"gratis", r"sin costo", r"sin cargo", r"no tiene costo", r"free"],

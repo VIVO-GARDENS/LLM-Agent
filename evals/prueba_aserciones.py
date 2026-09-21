@@ -159,6 +159,11 @@ def probar_cobertura_y_derivacion() -> None:
     _check(not d(_traza(_t(1, "Que raro, deberia haber llegado ayer."))).ok,
            "detecta que no derivo")
 
+    ng = a.no_dice_gratis()
+    _check(not ng(_traza(_t(1, "La visita es gratis 🌿"))).ok, "atrapa la palabra prohibida")
+    _check(not ng(_traza(_t(1, "The visit is free"))).ok, "tambien en ingles")
+    _check(ng(_traza(_t(1, "La visita no tiene costo 🌿"))).ok, "deja pasar 'no tiene costo'")
+    _check(ng(_traza(_t(1, "Vamos sin costo a tu casa"))).ok, "deja pasar 'sin costo'")
     g = a.ofrece_visita_gratis()
     _check(g(_traza(_t(1, "La visita es gratis 🌿"))).ok, "reconoce la visita gratis")
     _check(not g(_traza(_t(1, "Depende del espacio."))).ok, "detecta que no la ofrecio")

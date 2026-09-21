@@ -719,3 +719,53 @@ El **App ID**, el **`IG_VERIFY_TOKEN`** (cadena libre que debe coincidir con el
 panel de Meta) y que este aprobado el permiso
 **`instagram_business_manage_messages`**. Los tiene quien administra la app en
 Meta App Developer.
+
+---
+
+## 19. La palabra "gratis" no se usa (2026-09-20)
+
+Decision del dueño del negocio, por marca. **La visita SIGUE sin cobro y hay que
+seguir ofreciendola**: lo unico que cambia es como se dice.
+
+Esa distincion es la clave y por poco se pierde. "Quitar la palabra" admitia dos
+lecturas opuestas -- dejar de decirla, o dejar de prometer la gratuidad -- y
+producian codigo contrario. Se pregunto antes de tocar nada.
+
+### Por que no basta con reescribir el prompt
+
+Se midio primero: **la palabra salia en el 19% de las respuestas grabadas** (70
+de 360), en 14 casos distintos. Normal: el prompt la decia en cinco sitios. Pero
+reescribir esos cinco no impide que el modelo la use por su cuenta -- es la
+palabra natural en español. Hicieron falta las tres cosas:
+
+1. Los 5 sitios del prompt pasan a "sin costo" / "no tiene costo".
+2. Una prohibicion **explicita** en el prompt, que incluye el ingles: "at no
+   cost", nunca "free".
+3. `no_dice_gratis()` en los **invariantes base**, o sea en los 41 casos. Una
+   regla de marca vale en todos, no solo donde alguien se acuerde de declararla.
+
+Se eligio "sin costo" a proposito: `ofrece_visita_gratis()` ya acepta esa forma,
+asi que el banco **sigue verificando que la visita se ofrezca**. Las dos
+aserciones juntas dicen la regla completa: prometela, pero no con esa palabra.
+
+### Medido
+
+    antes:  19% de las respuestas decian la palabra
+    ahora:  2 de 162   (~1,2%)
+    ofrece_visita_gratis: 0 fallos  <- sigue ofreciendo la visita
+
+Marcador 38/39/38 contra 39/40/39. Esa diferencia **es exactamente** las dos
+fugas, las dos 1 de 3: `ingles` (se le escapo "free") y
+`apertura:cta_como_puedo_comprar` ("gratis").
+
+### Lo que queda
+
+El ~1% restante es el modelo alcanzando la palabra natural. Se puede reforzar la
+instruccion, pero con evidencia de 1 de 3 no se toca el prompt: esta mañana
+arreglar el horario asi rompio `sin_cifras`. Si sube, se ataca.
+
+⚠️ 7 sitios dicen "gratis" o "free" y **NO** son esta promesa: el boton
+hipotetico "Get a free quote" (es la voz del cliente), las listas de palabras
+comunes del detector de idioma, el README cuando dice que las pruebas en frio
+son gratis, y varios textos de prueba de otras aserciones. Borrarlos romperia
+cosas sin relacion.
