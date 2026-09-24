@@ -4,6 +4,7 @@
     {
       "id": "Webhook",
       "name": "Webhook",
+      "webhookId": "20d9557b-8b5d-4a66-86d7-9fc43d6d1b63",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
@@ -14,8 +15,7 @@
         "httpMethod": "POST",
         "path": "instagram",
         "responseMode": "responseNode"
-      },
-      "webhookId": "20d9557b-8b5d-4a66-86d7-9fc43d6d1b63"
+      }
     },
     {
       "id": "Responder 200",
@@ -102,13 +102,14 @@
       "name": "Leer historial",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
+      "alwaysOutputData": true,
       "position": [
         880,
         -60
       ],
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT mensajes FROM conversaciones WHERE sender_id = $1",
+        "query": "SELECT COALESCE((SELECT mensajes FROM conversaciones WHERE sender_id = $1), '[]'::jsonb) AS mensajes",
         "options": {
           "queryReplacement": "={{ $('Extraer mensaje').item.json.sender_id }}"
         }
@@ -141,7 +142,7 @@
       },
       "credentials": {
         "httpHeaderAuth": {
-          "id": "zTDfnIsvTAdAtIV9",
+          "id": "AzWa2rGRsnd3bmfa",
           "name": "Token servicio agente"
         }
       }

@@ -769,3 +769,51 @@ hipotetico "Get a free quote" (es la voz del cliente), las listas de palabras
 comunes del detector de idioma, el README cuando dice que las pruebas en frio
 son gratis, y varios textos de prueba de otras aserciones. Borrarlos romperia
 cosas sin relacion.
+
+---
+
+## 20. El workflow de n8n, probado de punta a punta (2026-09-23)
+
+Creado por la API y **verificado leyendolo de vuelta**, no a ciegas. Los
+typeVersion salen de las definiciones dentro del contenedor (n8n 2.39.8):
+webhook 2.1, respondToWebhook 1.5, code 2, if 2.3, switch 3.4, httpRequest 4.5,
+postgres 2.7, noOp 1.
+
+### El bug que solo aparece probandolo
+
+ hacia `SELECT mensajes ... WHERE sender_id = $1`. Para un
+cliente que escribe **por primera vez** eso no devuelve filas -- y ese es el
+caso normal de toda conversacion nueva. En n8n un nodo sin items **corta la
+rama**, asi que `Llamar al agente`, `Guardar historial` y `Que hizo?` no se
+ejecutaban... y la ejecucion figuraba como **success**.
+
+Una ejecucion verde que no guarda nada es el peor fallo posible: nadie lo nota.
+Se veia solo mirando los datos nodo por nodo (`mids` con una fila,
+`conversaciones` con cero).
+
+Corregido con COALESCE sobre una subconsulta, que siempre devuelve una fila
+(`[]` si el cliente es nuevo), mas `alwaysOutputData` como cinturon.
+
+### Medido
+
+    webhook responde 200 en 0.05-0.5s   <- antes de pensar, como exige Instagram
+    ejecucion                 success
+    mid registrado                  1
+    conversacion guardada           1
+    turnos en el historial          2
+    mismo mid otra vez -> historial sigue en 2
+
+Esa ultima linea es la que mas vale: Instagram reenvia el evento si el webhook
+no contesta a tiempo, y sin deduplicacion el cliente recibe la misma respuesta
+dos o tres veces. El INSERT ... ON CONFLICT DO NOTHING RETURNING no tiene la
+carrera que si tiene SELECT y luego INSERT.
+
+### Lo que falta
+
+Los dos nodos finales son `noOp` a proposito: enviar el DM por la Send API y
+avisar al equipo necesitan los datos de Meta (App ID, IG_VERIFY_TOKEN y el
+permiso instagram_business_manage_messages aprobado). El resto de la cadena ya
+funciona sin ellos.
+
+⚠️ El nodo Code se escribio **sin un payload real de Instagram delante**. Aguanta
+la forma documentada, pero hay que verificarlo contra uno de verdad.
