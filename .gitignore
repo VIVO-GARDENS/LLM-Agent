@@ -12,6 +12,9 @@ memoria/
 # Resultados de corridas de evaluación (traen transcripciones)
 *.json
 !.github/**/*.json
+# El workflow de n8n SI se versiona: es el despliegue, y no lleva secretos
+# (las credenciales viven dentro de n8n y aqui solo se referencian por id).
+!n8n/workflow.json
 corrida*.json
 
 # Python

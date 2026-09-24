@@ -1,0 +1,401 @@
+{
+  "name": "Vivo Gardens - DMs de Instagram",
+  "nodes": [
+    {
+      "id": "Webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -220,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "instagram",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "20d9557b-8b5d-4a66-86d7-9fc43d6d1b63"
+    },
+    {
+      "id": "Responder 200",
+      "name": "Responder 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "respondWith": "noData"
+      }
+    },
+    {
+      "id": "Extraer mensaje",
+      "name": "Extraer mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// El payload de Instagram anida distinto segun el tipo de mensaje.\n// OJO: escrito SIN un payload real delante. Verificar contra uno de verdad\n// antes de confiar en el.\nconst salida = [];\nfor (const item of $input.all()) {\n  const cuerpo = item.json.body ?? item.json;\n  for (const entrada of cuerpo.entry ?? []) {\n    for (const m of entrada.messaging ?? []) {\n      const msg = m.message ?? {};\n      const adjuntos = msg.attachments ?? [];\n      salida.push({ json: {\n        sender_id: m.sender?.id ?? '',\n        mid: msg.mid ?? '',\n        texto: msg.text ?? '',\n        imagenes: adjuntos.filter(a => a.type === 'image').map(a => a.payload?.url).filter(Boolean),\n      }});\n    }\n  }\n}\nreturn salida;"
+      }
+    },
+    {
+      "id": "Marcar mid",
+      "name": "Marcar mid",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mids (mid) VALUES ($1) ON CONFLICT (mid) DO NOTHING RETURNING mid",
+        "options": {
+          "queryReplacement": "={{ $json.mid }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "ixoi4s4pPOhe0cnG",
+          "name": "Postgres agente"
+        }
+      }
+    },
+    {
+      "id": "Es nuevo?",
+      "name": "Es nuevo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.mid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Leer historial",
+      "name": "Leer historial",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        880,
+        -60
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT mensajes FROM conversaciones WHERE sender_id = $1",
+        "options": {
+          "queryReplacement": "={{ $('Extraer mensaje').item.json.sender_id }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "ixoi4s4pPOhe0cnG",
+          "name": "Postgres agente"
+        }
+      }
+    },
+    {
+      "id": "Llamar al agente",
+      "name": "Llamar al agente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1100,
+        -60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/responder",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ sender_id: $('Extraer mensaje').item.json.sender_id, mensajes: $json.mensajes ?? [], texto: $('Extraer mensaje').item.json.texto, imagenes: $('Extraer mensaje').item.json.imagenes }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zTDfnIsvTAdAtIV9",
+          "name": "Token servicio agente"
+        }
+      }
+    },
+    {
+      "id": "Guardar historial",
+      "name": "Guardar historial",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1320,
+        -60
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO conversaciones (sender_id, mensajes, actualizado) VALUES ($1, $2::jsonb, now()) ON CONFLICT (sender_id) DO UPDATE SET mensajes = EXCLUDED.mensajes, actualizado = now()",
+        "options": {
+          "queryReplacement": "={{ $('Extraer mensaje').item.json.sender_id }},{{ JSON.stringify($json.mensajes) }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "ixoi4s4pPOhe0cnG",
+          "name": "Postgres agente"
+        }
+      }
+    },
+    {
+      "id": "Que hizo?",
+      "name": "Que hizo?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        -60
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Llamar al agente').item.json.herramienta }}",
+                    "rightValue": "agendar_visita",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "visita"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Llamar al agente').item.json.herramienta }}",
+                    "rightValue": "registrar_pedido",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "pedido"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Llamar al agente').item.json.herramienta }}",
+                    "rightValue": "consultar_al_equipo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "consulta"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "solo conversa"
+        }
+      }
+    },
+    {
+      "id": "Avisar al equipo",
+      "name": "Avisar al equipo",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "Enviar DM",
+      "name": "Enviar DM",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        40
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Responder 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder 200": {
+      "main": [
+        [
+          {
+            "node": "Extraer mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer mensaje": {
+      "main": [
+        [
+          {
+            "node": "Marcar mid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar mid": {
+      "main": [
+        [
+          {
+            "node": "Es nuevo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es nuevo?": {
+      "main": [
+        [
+          {
+            "node": "Leer historial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Leer historial": {
+      "main": [
+        [
+          {
+            "node": "Llamar al agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llamar al agente": {
+      "main": [
+        [
+          {
+            "node": "Guardar historial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar historial": {
+      "main": [
+        [
+          {
+            "node": "Que hizo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Que hizo?": {
+      "main": [
+        [
+          {
+            "node": "Avisar al equipo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar al equipo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar al equipo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar DM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
