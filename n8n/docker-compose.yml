@@ -23,6 +23,9 @@ services:
     env_file: ../.env
     volumes:
       - datos_postgres:/var/lib/postgresql/data
+      # Solo se ejecuta al inicializar el volumen por primera vez. Sobre un
+      # volumen existente hay que aplicarlo a mano (ver esquema.sql).
+      - ./esquema.sql:/docker-entrypoint-initdb.d/10-esquema.sql:ro
     healthcheck:
       # n8n arranca antes que la base y se cae. Esperar a que responda de verdad.
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
