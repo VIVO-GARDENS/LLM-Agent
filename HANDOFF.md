@@ -781,7 +781,7 @@ postgres 2.7, noOp 1.
 
 ### El bug que solo aparece probandolo
 
- hacia `SELECT mensajes ... WHERE sender_id = $1`. Para un
+`Leer historial` hacia `SELECT mensajes ... WHERE sender_id = $1`. Para un
 cliente que escribe **por primera vez** eso no devuelve filas -- y ese es el
 caso normal de toda conversacion nueva. En n8n un nodo sin items **corta la
 rama**, asi que `Llamar al agente`, `Guardar historial` y `Que hizo?` no se
