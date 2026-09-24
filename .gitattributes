@@ -1,0 +1,4 @@
+# psql los ejecuta dentro de un contenedor Linux. Con finales CRLF, el  de
+# una linea como "\connect agente" se lee como parte del nombre de la base y el
+# despliegue falla con: database "agente" does not exist.
+*.sql text eol=lf
