@@ -93,3 +93,17 @@ Tres datos que tiene quien administra la app en Meta App Developer:
 - el **App ID** de la app de Meta
 - el **`IG_VERIFY_TOKEN`**, cadena libre que debe coincidir con la del panel
 - que esté aprobado el permiso **`instagram_business_manage_messages`**
+
+---
+
+## Rotar el token del servicio
+
+`n8n/cablear_token.py` genera un `SERVICIO_TOKEN` nuevo, reinicia el servicio,
+actualiza la credencial en n8n y **verifica las dos caras**: sin cabecera tiene
+que dar 401 y con la cabecera correcta 200. Comprobar solo el camino feliz es
+como no comprobar nada.
+
+⚠️ La API publica de n8n **no permite actualizar credenciales**: `PUT` y `PATCH`
+sobre `/api/v1/credentials/{id}` devuelven **405**. Hay que borrar y recrear, y
+entonces el id cambia, asi que el workflow que la referencia se queda apuntando
+a una credencial que ya no existe. El script lo maneja: recrea y repunta el nodo.
