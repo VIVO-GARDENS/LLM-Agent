@@ -605,6 +605,32 @@ def no_dice_gratis() -> Asercion:
     return no_contiene([r"\bgratis", r"\bfree\b"], "no_dice_gratis")
 
 
+def pide_foto() -> Asercion:
+    """Ante una planta que no ubica, el equipo pide una foto antes de escalar.
+
+    Observado el 2026-09-25: "Almendron? envíame foto". Resuelve en el momento
+    lo que una consulta al equipo deja esperando, y el cliente suele llamar a la
+    planta por un nombre local que se reconoce al verla.
+    """
+    return contiene_alguno(
+        [r"foto", r"imagen", r"env[ií]ame", r"m[áa]ndame", r"photo", r"picture"],
+        "pide_foto")
+
+
+def no_rechaza_al_cliente() -> Asercion:
+    """Un negocio que quiere COMPRAR plantas es cliente, no proveedor.
+
+    Un catering pidiendo matas para sus buffets es una venta. Confundirlo con
+    una agencia que vende servicios cuesta el pedido, y es un error facil
+    porque los dos escriben "tengo un negocio".
+    """
+    return no_contiene(
+        [r"no (?:trabajamos|atendemos|manejamos) (?:con|ese)",
+         r"no (?:somos|es) (?:el|lo que)",
+         r"no podemos ayudar"],
+        "no_rechaza_al_cliente")
+
+
 def ofrece_visita_gratis() -> Asercion:
     return contiene_alguno(
         [r"gratis", r"sin costo", r"sin cargo", r"no tiene costo", r"free"],

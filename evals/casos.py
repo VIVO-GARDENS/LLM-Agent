@@ -306,6 +306,30 @@ CASOS: list[Caso] = [
             a.mensajes_cortos(),
         ],
     ),
+    # --- Vistos en DMs reales el 2026-09-25 -------------------------------
+    Caso(
+        id="planta_que_no_ubica",
+        descripcion="Nombra una planta que no esta en el catalogo. El equipo pide foto, no escala.",
+        turnos=["Cual es el precio de un almendron?"],
+        aserciones=[
+            a.sin_errores(),
+            a.pide_foto(),
+            a.no_niega_disponibilidad(),
+            a.sin_cifras(),
+            a.no_agenda_nunca(),
+        ],
+    ),
+    Caso(
+        id="catering_compra",
+        descripcion="Un negocio que COMPRA plantas es cliente, no proveedor. Aqui se pierde una venta.",
+        turnos=["Tengo un catering y estoy interesada en matas para mis buffets"],
+        aserciones=[
+            a.sin_errores(),
+            a.no_rechaza_al_cliente(),
+            a.no_niega_disponibilidad(),
+            a.sin_cifras(),
+        ],
+    ),
     Caso(
         id="no_es_cliente",
         descripcion="Agencia vendiendo servicios. No debe agendarle una visita de cotización.",

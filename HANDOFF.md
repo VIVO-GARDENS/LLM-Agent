@@ -870,3 +870,68 @@ La app vive en modo Desarrollo, donde los permisos funcionan sin revision
 mientras las cuentas implicadas tengan un rol en la app. App Review hace falta
 para atender a clientes que NO tienen rol -- o sea, para produccion -- y tarda
 semanas o meses. Se construye y se prueba ahora; se revisa para salir.
+
+---
+
+## 22. Pedir fotos y distinguir al negocio que compra (2026-09-25)
+
+Dos conductas sacadas de DMs reales que el dueno del proyecto pego a mano. La
+procedencia importa: **no se obtuvieron con automatizacion de navegador**, que
+es lo que Meta penaliza (seccion 21). El material crudo esta en
+`memoria/dms-2026-09-25.md`, fuera del repo.
+
+### 1. Pedir una foto antes de escalar
+
+Un cliente pregunto el precio de un frutal tropical que **no esta en el
+catalogo** (verificado). Ante una planta que no ubican, el equipo **no** abre
+una consulta interna: **pide una foto**. Resuelve en
+el momento lo que una consulta deja esperando, y el cliente suele usar un
+nombre local que se reconoce al verlo.
+
+El prompt no tenia **nada** sobre pedir fotos -- solo sabia recibirlas.
+
+### 2. Un negocio que COMPRA es cliente, no proveedor
+
+Un servicio de catering escribio buscando plantas para decorar sus buffets, y
+el equipo lo atendio como a cualquier cliente.
+
+El unico caso B2B del banco era `no_es_cliente`: una agencia de marketing
+**vendiendo** servicios, a la que hay que declinar. Un catering que quiere
+plantas es lo contrario: una venta, y de las grandes. La diferencia no es que
+sea una empresa, es **que quiere**. El agente podia estar rechazando clientes.
+
+### Lo que se vio funcionando
+
+    planta_que_no_ubica -> "No conozco ese nombre exacto 🌿 ¿me mandas una foto
+                            de la planta para identificarla bien?"
+    catering_compra     -> "¡Qué bueno! 🌿 ¿Tienes en mente qué tipo de plantas
+                            buscas, o prefieres que te sugiramos opciones...?"
+
+### ⚠️ MEDICION PENDIENTE -- no leer esto como verificado
+
+**Se acabaron los creditos de la API a mitad de la medicion.** La corrida 1
+llego al caso 6 y de ahi en adelante todo fallo con `credit balance is too low`.
+Las corridas 2 y 3 dieron 0/43, que **no** es una regresion: son llamadas que
+no se ejecutaron.
+
+Verificado en frio (gratis): las dos aserciones nuevas funcionan en ambas
+direcciones, la suite construye sus 43 casos, el prompt lleva las dos conductas.
+
+**Sin verificar: si los ~900 caracteres anadidos al prompt afectaron a los otros
+41 casos.** La referencia previa era 38/39/38 sobre 41. Al recargar, lo primero
+es correr el banco completo 3 veces y comparar contra esa cifra.
+
+### Cuanto cuesta esto, medido
+
+    corridas del banco registradas    $2.11
+    total gastado (con pruebas sueltas, servicio y ejecutar.py)  ~$5
+
+El bot es barato; **medirlo es lo caro**. La proyeccion para los 613 mensajes
+reales del negocio lleva todo el dia en **~$1.30/mes**. Los $5 se fueron en
+desarrollo: una medicion de 3 corridas sobre 43 casos son ~$0.30, y se hicieron
+unas diez.
+
+Metodo mas barato de aqui en adelante: el banco completo 3x **solo** cuando el
+cambio es amplio (el prompt). Para algo acotado, el grupo afectado cuesta
+centimos -- `--grupo nuevas` fueron $0.005 -- y `--caso X` menos todavia. Las
+pruebas en frio no cuestan nada y hoy atraparon varios bugs.
