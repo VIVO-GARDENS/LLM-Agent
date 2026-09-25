@@ -817,3 +817,56 @@ funciona sin ellos.
 
 ⚠️ El nodo Code se escribio **sin un payload real de Instagram delante**. Aguanta
 la forma documentada, pero hay que verificarlo contra uno de verdad.
+
+---
+
+## 21. Reglas de Meta: que nos puede costar la cuenta (2026-09-25)
+
+Lo que hace que Meta restrinja una cuenta en mensajeria automatizada no es
+tener un bot: es enviar donde no se debe. Cuatro reglas, y como queda el diseno
+frente a cada una.
+
+### 1. La ventana de 24 horas -- IMPLEMENTADA
+
+Solo se puede enviar dentro de las 24 h desde la ultima interaccion del
+cliente. Pasado eso la API bloquea el envio hasta que el cliente vuelva a
+escribir.
+
+El nodo `Dentro de 24h?` calcula la edad del mensaje entrante y corta si pasa
+de 24 h; el mensaje viejo se deriva a `Avisar al equipo`, no se responde. Va
+como nodo aparte del IF de deduplicacion a proposito: si se mezclan, una
+ejecucion detenida no dice si fue un duplicado o una ventana vencida.
+
+Probado en las **dos** direcciones, porque una guarda que bloquea todo se ve
+igual que una que funciona hasta que el bot se queda mudo:
+
+    mensaje de hace 5 min  -> responde, 2 turnos guardados
+    mensaje de hace 48 h   -> detenido, 0 turnos, no llama al agente
+
+### 2. La etiqueta HUMAN_AGENT es una trampa
+
+Extiende la ventana a 7 dias, pero es **solo para respuestas humanas**. Usarla
+para mensajes automaticos es una violacion que Meta vigila. **El agente no usa
+etiquetas de ningun tipo**, y el nodo de envio tampoco debe usarlas cuando se
+escriba.
+
+### 3. Nada de DMs en frio
+
+Escribir a quien no escribio primero es de lo que mas cuesta. El agente solo
+responde: lo dispara el webhook de un mensaje entrante y no tiene forma de
+iniciar una conversacion.
+
+### 4. ⚠️ Bots de navegador y scraping
+
+Meta lista explicitamente la automatizacion de navegador como causa de
+restriccion. **El barrido de la bandeja del 2026-09-18 (seccion 14) se hizo
+asi**: leyendo los 15 hilos con automatizacion de Chrome sobre la propia
+cuenta. Dio los hallazgos que cambiaron el proyecto, pero **no debe repetirse**:
+de aqui en adelante todo lo que sea leer o escribir DMs pasa por la API oficial.
+
+### Para el dia de App Review
+
+La app vive en modo Desarrollo, donde los permisos funcionan sin revision
+mientras las cuentas implicadas tengan un rol en la app. App Review hace falta
+para atender a clientes que NO tienen rol -- o sea, para produccion -- y tarda
+semanas o meses. Se construye y se prueba ahora; se revisa para salir.

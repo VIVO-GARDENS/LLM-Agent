@@ -40,7 +40,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "// El payload de Instagram anida distinto segun el tipo de mensaje.\n// OJO: escrito SIN un payload real delante. Verificar contra uno de verdad\n// antes de confiar en el.\nconst salida = [];\nfor (const item of $input.all()) {\n  const cuerpo = item.json.body ?? item.json;\n  for (const entrada of cuerpo.entry ?? []) {\n    for (const m of entrada.messaging ?? []) {\n      const msg = m.message ?? {};\n      const adjuntos = msg.attachments ?? [];\n      salida.push({ json: {\n        sender_id: m.sender?.id ?? '',\n        mid: msg.mid ?? '',\n        texto: msg.text ?? '',\n        imagenes: adjuntos.filter(a => a.type === 'image').map(a => a.payload?.url).filter(Boolean),\n      }});\n    }\n  }\n}\nreturn salida;"
+        "jsCode": "// El payload de Instagram anida distinto segun el tipo de mensaje.\n// OJO: escrito SIN un payload real delante. Verificar contra uno de verdad.\nconst salida = [];\nconst ahora = Date.now();\nfor (const item of $input.all()) {\n  const cuerpo = item.json.body ?? item.json;\n  for (const entrada of cuerpo.entry ?? []) {\n    for (const m of entrada.messaging ?? []) {\n      const msg = m.message ?? {};\n      const adjuntos = msg.attachments ?? [];\n      // Sin timestamp se asume recien llegado: bloquear todo por un campo\n      // ausente dejaria al bot mudo, y en un webhook real siempre viene.\n      const ts = Number(m.timestamp ?? entrada.time ?? ahora);\n      salida.push({ json: {\n        sender_id: m.sender?.id ?? '',\n        mid: msg.mid ?? '',\n        texto: msg.text ?? '',\n        imagenes: adjuntos.filter(a => a.type === 'image').map(a => a.payload?.url).filter(Boolean),\n        timestamp: ts,\n        edad_horas: Math.max(0, (ahora - ts) / 3600000),\n      }});\n    }\n  }\n}\nreturn salida;"
       }
     },
     {
@@ -271,6 +271,36 @@
         40
       ],
       "parameters": {}
+    },
+    {
+      "id": "Dentro de 24h?",
+      "name": "Dentro de 24h?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extraer mensaje').item.json.edad_horas }}",
+              "rightValue": 24,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -322,7 +352,7 @@
       "main": [
         [
           {
-            "node": "Leer historial",
+            "node": "Dentro de 24h?",
             "type": "main",
             "index": 0
           }
@@ -389,6 +419,24 @@
         [
           {
             "node": "Enviar DM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dentro de 24h?": {
+      "main": [
+        [
+          {
+            "node": "Leer historial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar al equipo",
             "type": "main",
             "index": 0
           }
